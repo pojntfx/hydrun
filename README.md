@@ -1,6 +1,6 @@
 # hydrun
 
-Execute a command for multiple architectures and operating systems.
+Execute a command for the current directory on multiple architectures and operating systems.
 
 ![hydrun CI](https://github.com/pojntfx/hydrun/workflows/hydrun%20CI/badge.svg)
 
