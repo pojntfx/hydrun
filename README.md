@@ -4,6 +4,19 @@ Execute a command for the current directory on multiple architectures and operat
 
 ![hydrun CI](https://github.com/pojntfx/hydrun/workflows/hydrun%20CI/badge.svg)
 
+## Overview
+
+Hydra Run, or hydrun, is a thin (<200 SLOC) layer atop [Docker buildx](https://github.com/docker/buildx) and [qemu-user-static](https://ngithub.com/multiarch/qemu-user-static). It allows one to easily execute a command on different processor architectures and operating systems than the host.
+
+It can, for example, be used for ...
+
+- **Cross-compilation that "just works"**, without having to set up a cross-compiler (at the cost of longer build times)
+- **Multi-architecture testing**
+- **Building arm64 binaries on GitHub actions**, which doesn't support arm64 runners or Linux distros other than Ubuntu
+- Quickly getting an **interactive arm64 shell for the current directory on an amd64 host** or the other way round
+- Running binaries built against **glibc on an Alpine Linux host**
+- Making **CI release builds locally reproducable and testable**, without having to `git push` and wait
+
 ## Installation
 
 Binaries are available on [GitHub releases](https://github.com/pojntfx/hydrun/releases).
@@ -16,6 +29,10 @@ $ sudo install /tmp/hydrun /usr/local/bin
 ```
 
 ## Usage
+
+TODO: Add quick usage guide
+
+## Reference
 
 ```shell
 $ hydrun --help
