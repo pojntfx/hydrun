@@ -37,6 +37,15 @@ func main() {
 
 	pflag.Parse()
 
+	// Validate the flags
+	if pflag.NArg() == 0 {
+		pflag.Usage()
+
+		fmt.Println("needs an argument: 'command' in <commands...>")
+
+		return
+	}
+
 	// Interpret flags
 	architectures := strings.Split(*archFlag, ",")
 	operatingSystems := strings.Split(*osFlag, ",")
