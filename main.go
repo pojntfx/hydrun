@@ -58,10 +58,7 @@ Usage: %s [OPTION...] "<COMMAND...>"
 	arches := strings.Split(*archFlag, ",")
 	oses := strings.Split(*osFlag, ",")
 	command := strings.Join(pflag.Args(), " ")
-	pwd, err := osutils.Getwd()
-	if err != nil {
-		panic(err)
-	}
+	pwd := osutils.Getenv("PWD")
 
 	// Create build matrix
 	targets := []Target{}
