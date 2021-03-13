@@ -20,7 +20,7 @@ jobs:
         with:
           go-version: 1.16
       - name: Build with hydrun
-        run: go run main.go -arch amd64,arm64 ./Hydrunfile
+        run: go run main.go -a amd64,arm64 ./Hydrunfile
       - name: Publish to GitHub releases
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: marvinpinto/action-automatic-releases@latest
