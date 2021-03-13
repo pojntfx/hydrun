@@ -1,4 +1,4 @@
-# hydrun
+# hydrun ("Hydra Run")
 
 Execute a command for the current directory on multiple architectures and operating systems.
 
@@ -12,7 +12,7 @@ Binaries are available on [GitHub releases](https://github.com/pojntfx/hydrun/re
 
 ```shell
 $ hydrun --help
-Execute a command for multiple architectures and operating systems.
+Execute a command for the current directory on multiple architectures and operating systems.
 
 See https://github.com/pojntfx/hydrun for more information.
 
