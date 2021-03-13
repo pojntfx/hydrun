@@ -11,7 +11,7 @@ Binaries are available on [GitHub releases](https://github.com/pojntfx/hydrun/re
 You can install them like so:
 
 ```shell
-$ curl -L -o /tmp/hydrun https://github.com/pojntfx/hydrun/releases/download/latest/hydrun-linux.$(uname -m).tar.gz
+$ curl -L -o /tmp/hydrun https://github.com/pojntfx/hydrun/releases/download/latest/hydrun.linux-$(uname -m)
 $ sudo install /tmp/hydrun /usr/local/bin
 ```
 
