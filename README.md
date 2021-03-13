@@ -8,6 +8,13 @@ Execute a command for the current directory on multiple architectures and operat
 
 Binaries are available on [GitHub releases](https://github.com/pojntfx/hydrun/releases).
 
+You can install them like so:
+
+```shell
+$ curl -L -o /tmp/hydrun https://github.com/pojntfx/hydrun/releases/download/latest/hydrun-linux.$(uname -m).tar.gz
+$ sudo install /tmp/hydrun /usr/local/bin
+```
+
 ## Usage
 
 ```shell
