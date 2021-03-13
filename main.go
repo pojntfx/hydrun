@@ -84,7 +84,7 @@ Usage: %s [OPTION...] "<COMMAND...>"
 
 		go func(t Target) {
 			// Construct the arguments
-			dockerArgs := fmt.Sprintf(`run %v %v:/data --platform linux/%v %v /bin/sh -c`, func() string {
+			dockerArgs := fmt.Sprintf(`run %v %v:/data:z --platform linux/%v %v /bin/sh -c`, func() string {
 				// Attach stdin and setup a TTY
 				if *itFlag {
 					return "-it -v"
