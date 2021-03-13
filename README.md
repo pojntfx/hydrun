@@ -1,6 +1,6 @@
 # hydrun
 
-Run a command for the current directory on multiple processor architectures and operating systems.
+Execute a command for multiple architectures and operating systems.
 
 ![hydrun CI](https://github.com/pojntfx/hydrun/workflows/hydrun%20CI/badge.svg)
 
@@ -12,14 +12,15 @@ Binaries are available on [GitHub releases](https://github.com/pojntfx/hydrun/re
 
 ```shell
 $ hydrun --help
-Run a command for the current directory on multiple processor architectures and operating systems.
-
-Usage: hydrun [options...] "<commands...>"
-  -a, --arch string   Processor architecture(s) to run on. Separate multiple values with commas. (default "amd64,arm64v8")
-  -j, --jobs int      Max amount of arch/os combinations to run in parallel (default 1)
-  -o, --os string     Operating system(s) to run on. Separate multiple values with commas. (default "debian")
+Execute a command for multiple architectures and operating systems.
 
 See https://github.com/pojntfx/hydrun for more information.
+
+Usage: hydrun [OPTION...] "<COMMAND...>"
+  -a, --arch string   Comma-separated list of architectures to run on (default "amd64")
+  -i, --it            Attach stdin and setup a TTY
+  -j, --jobs int      Maximum amount of parallel jobs (default 1)
+  -o, --os string     Comma-separated list of operating systems to run on (default "debian")
 ```
 
 ## License

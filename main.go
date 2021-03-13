@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	osutils "os"
 	"os/exec"
 	"strings"
 
@@ -12,91 +13,101 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-type target struct {
-	architecture    string
-	operatingSystem string
-	command         string
+// Target is a target in the build matrix
+type Target struct {
+	Architecture string
+	OS           string
+	Command      string
 }
 
 func main() {
-	// Usage info
+	// Define usage
 	pflag.Usage = func() {
-		fmt.Printf("Run a command for the current directory on multiple processor architectures and operating systems.\n\n")
+		fmt.Printf(`Execute a command for multiple architectures and operating systems.
 
-		fmt.Printf("Usage: %s [options...] \"<commands...>\"\n", os.Args[0])
+See https://github.com/pojntfx/hydrun for more information.
+
+Usage: %s [OPTION...] "<COMMAND...>"
+`, os.Args[0])
 
 		pflag.PrintDefaults()
-
-		fmt.Printf("\nSee https://github.com/pojntfx/hydrun for more information.\n")
 	}
 
 	// Parse flags
-	archFlag := pflag.StringP("arch", "a", "amd64", "Processor architecture(s) to run on. Separate multiple values with commas.")
-	osFlag := pflag.StringP("os", "o", "debian", "Operating system(s) to run on. Separate multiple values with commas.")
-	jobsFlag := pflag.Int64P("jobs", "j", 1, "Max amount of arch/os combinations to run in parallel")
-	interactive := pflag.BoolP("interactive", "i", false, "Run command interactively")
+	archFlag := pflag.StringP("arch", "a", "amd64", "Comma-separated list of architectures to run on")
+	osFlag := pflag.StringP("os", "o", "debian", "Comma-separated list of operating systems to run on")
+	jobFlag := pflag.Int64P("jobs", "j", 1, "Maximum amount of parallel jobs")
+	itFlag := pflag.BoolP("it", "i", false, "Attach stdin and setup a TTY")
 
 	pflag.Parse()
 
-	// Validate the flags
+	// Validate arguments
 	if pflag.NArg() == 0 {
+		help := `command needs an argument: 'COMMAND' in "<COMMAND...>"`
+
+		fmt.Println(help)
+
 		pflag.Usage()
 
-		fmt.Println("needs an argument: 'command' in <commands...>")
+		fmt.Println(help)
 
-		return
+		os.Exit(2)
 	}
 
-	// Interpret flags
-	architectures := strings.Split(*archFlag, ",")
-	operatingSystems := strings.Split(*osFlag, ",")
+	// Interpret arguments
+	arches := strings.Split(*archFlag, ",")
+	oses := strings.Split(*osFlag, ",")
 	command := strings.Join(pflag.Args(), " ")
-	pwd, err := os.Getwd()
+	pwd, err := osutils.Getwd()
 	if err != nil {
 		panic(err)
 	}
 
-	// Create target matrix
-	targets := []target{}
-	for _, architecture := range architectures {
-		for _, operatingSystem := range operatingSystems {
-			targets = append(targets, target{
-				architecture:    architecture,
-				operatingSystem: operatingSystem,
-				command:         command,
+	// Create build matrix
+	targets := []Target{}
+	for _, arch := range arches {
+		for _, os := range oses {
+			targets = append(targets, Target{
+				Architecture: arch,
+				OS:           os,
+				Command:      command,
 			})
 		}
 	}
 
-	// Run the targets
-	sem := semaphore.NewWeighted(*jobsFlag)
+	// Setup concurrency
+	sem := semaphore.NewWeighted(*jobFlag)
 	ctx := context.Background()
-	for _, t := range targets {
+
+	for _, target := range targets {
+		// Aquire lock
 		if err := sem.Acquire(ctx, 1); err != nil {
 			panic(err)
 		}
 
-		go func(it target) {
-			// Construct run command
+		go func(t Target) {
+			// Construct the arguments
 			dockerArgs := fmt.Sprintf(`run %v %v:/data --platform linux/%v %v /bin/sh -c`, func() string {
-				if *interactive {
+				// Attach stdin and setup a TTY
+				if *itFlag {
 					return "-it -v"
 				}
 
 				return "-v"
-			}(), pwd, it.architecture, it.operatingSystem)
-			commandArgs := fmt.Sprintf(`cd /data && %v`, it.command)
+			}(), pwd, t.Architecture, t.OS)
+			commandArgs := fmt.Sprintf(`cd /data && %v`, t.Command)
 
+			// Construct the command
 			cmd := exec.Command("docker", append(strings.Split(dockerArgs, " "), commandArgs)...)
 
-			// Handle stdin, stdout and stderr
-			if *interactive {
-				// Attach stdin, stdout and and stderr
-				cmd.Stdin = os.Stdin
-				cmd.Stdout = os.Stdout
-				cmd.Stderr = os.Stderr
+			// Handle interactivity
+			if *itFlag {
+				// Attach stdin, stdout and stderr
+				cmd.Stdin = osutils.Stdin
+				cmd.Stdout = osutils.Stdout
+				cmd.Stderr = osutils.Stderr
 			} else {
-				// Capture stdout and stderr
+				// Get stdout and stderr pipes
 				stdout, err := cmd.StdoutPipe()
 				if err != nil {
 					panic(err)
@@ -106,22 +117,25 @@ func main() {
 					panic(err)
 				}
 
-				// Print stdout and stderr
+				// Read from stderr and stdout
 				stdoutScanner := bufio.NewScanner(stdout)
 				stderrScanner := bufio.NewScanner(stderr)
 
+				// Split into lines
 				stdoutScanner.Split(bufio.ScanLines)
 				stderrScanner.Split(bufio.ScanLines)
 
+				// Print to stdout with prefix
+				prefix := fmt.Sprintf("%v/%v/%v", t.Architecture, t.OS, t.Command)
 				go func() {
 					for stdoutScanner.Scan() {
-						fmt.Println(stdoutScanner.Text())
+						fmt.Println(prefix+"/stdout\t", stdoutScanner.Text())
 					}
 				}()
 
 				go func() {
 					for stderrScanner.Scan() {
-						fmt.Println(stderrScanner.Text())
+						fmt.Println(prefix+"/stderr\t", stderrScanner.Text())
 					}
 				}()
 			}
@@ -131,10 +145,11 @@ func main() {
 				panic(err)
 			}
 
+			// Release lock
 			sem.Release(1)
-		}(t)
+		}(target)
 	}
 
 	// Wait till all targets have run
-	sem.Acquire(ctx, *jobsFlag)
+	sem.Acquire(ctx, *jobFlag)
 }
