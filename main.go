@@ -1,12 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
-	"log"
 	"os"
+	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/spf13/pflag"
 	"golang.org/x/sync/semaphore"
@@ -31,7 +31,7 @@ func main() {
 	}
 
 	// Parse flags
-	archFlag := pflag.StringP("arch", "a", "amd64,arm64v8", "Processor architecture(s) to run on. Separate multiple values with commas.")
+	archFlag := pflag.StringP("arch", "a", "amd64,arm64", "Processor architecture(s) to run on. Separate multiple values with commas.")
 	osFlag := pflag.StringP("os", "o", "debian", "Operating system(s) to run on. Separate multiple values with commas.")
 	jobsFlag := pflag.Int64P("jobs", "j", 1, "Max amount of arch/os combinations to run in parallel")
 
@@ -67,9 +67,48 @@ func main() {
 		}
 
 		go func(it target) {
-			log.Printf("[%v@%v %v]# %v\n", it.operatingSystem, it.architecture, pwd, it.command)
+			// Construct run command
+			dockerArgs := fmt.Sprintf(`run -v %v:/data --platform linux/%v %v /bin/sh -c`, pwd, it.architecture, it.operatingSystem)
+			commandArgs := fmt.Sprintf(`cd /data && %v`, it.command)
 
-			time.Sleep(time.Second * 3)
+			cmd := exec.Command("docker", append(strings.Split(dockerArgs, " "), commandArgs)...)
+
+			// Capture stdout and stderr
+			stdout, err := cmd.StdoutPipe()
+			if err != nil {
+				panic(err)
+			}
+			stderr, err := cmd.StderrPipe()
+			if err != nil {
+				panic(err)
+			}
+
+			// Start the command
+			if err := cmd.Start(); err != nil {
+				panic(err)
+			}
+
+			// Print stdout and stderr
+			stdoutScanner := bufio.NewScanner(stdout)
+			stderrScanner := bufio.NewScanner(stderr)
+
+			stdoutScanner.Split(bufio.ScanLines)
+			stderrScanner.Split(bufio.ScanLines)
+
+			go func() {
+				for stdoutScanner.Scan() {
+					fmt.Println(stdoutScanner.Text())
+				}
+			}()
+
+			go func() {
+				for stderrScanner.Scan() {
+					fmt.Println(stderrScanner.Text())
+				}
+			}()
+
+			// Wait till the command has finished
+			cmd.Wait()
 
 			sem.Release(1)
 		}(t)
