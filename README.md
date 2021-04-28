@@ -30,7 +30,7 @@ $ sudo install /tmp/hydrun /usr/local/bin
 
 ## Usage
 
-Before continuing, please ensure that you have both [Docker buildx](https://github.com/docker/buildx) and [qemu-user-static](https://ngithub.com/multiarch/qemu-user-static) installed on the host.
+Before continuing, please ensure that you have both [Docker buildx](https://github.com/docker/buildx) and [qemu-user-static](https://github.com/multiarch/qemu-user-static) installed on the host.
 
 ### To Get an Interactive Shell
 
