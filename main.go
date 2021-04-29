@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"log"
 	"os"
 	osutils "os"
 	"os/exec"
@@ -38,6 +39,7 @@ Usage: %s [OPTION...] "<COMMAND...>"
 	osFlag := pflag.StringP("os", "o", "debian", "Comma-separated list of operating systems to run on")
 	jobFlag := pflag.Int64P("jobs", "j", 1, "Maximum amount of parallel jobs")
 	itFlag := pflag.BoolP("it", "i", false, "Attach stdin and setup a TTY")
+	extraArgs := pflag.StringP("extraArgs", "e", "", "Extra arguments to pass to the Docker command")
 
 	pflag.Parse()
 
@@ -84,18 +86,27 @@ Usage: %s [OPTION...] "<COMMAND...>"
 
 		go func(t Target) {
 			// Construct the arguments
-			dockerArgs := fmt.Sprintf(`run %v %v:/data:z --platform linux/%v %v /bin/sh -c`, func() string {
+			dockerArgs := fmt.Sprintf(`run %v %v:/data:z --platform linux/%v%v %v /bin/sh -c`, func() string {
 				// Attach stdin and setup a TTY
 				if *itFlag {
 					return "-it -v"
 				}
 
 				return "-v"
-			}(), pwd, t.Architecture, t.OS)
+			}(), pwd, t.Architecture, func() string {
+				args := *extraArgs
+				if args != "" {
+					args = " " + args
+				}
+
+				return args
+			}(), t.OS)
 			commandArgs := fmt.Sprintf(`cd /data && %v`, t.Command)
 
 			// Construct the command
 			cmd := exec.Command("docker", append(strings.Split(dockerArgs, " "), commandArgs)...)
+
+			log.Println(cmd)
 
 			// Handle interactivity
 			if *itFlag {
