@@ -6,7 +6,7 @@ Execute a command for the current directory on multiple architectures and operat
 
 ## Overview
 
-Hydra Run, or hydrun, is a thin (<200 SLOC) layer atop [Docker buildx](https://github.com/docker/buildx) and [qemu-user-static](https://ngithub.com/multiarch/qemu-user-static). It allows one to easily execute a command on different processor architectures and operating systems than the host.
+Hydra Run, or hydrun, is a thin (<200 SLOC) layer atop [Docker buildx](https://github.com/docker/buildx) and [qemu-user-static](https://github.com/multiarch/qemu-user-static). It allows one to easily execute a command on different processor architectures and operating systems than the host.
 
 It can, for example, be used for ...
 
