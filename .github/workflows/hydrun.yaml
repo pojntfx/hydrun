@@ -20,8 +20,8 @@ jobs:
         with:
           go-version: 1.16
       - name: Build with hydrun
-        run: go run main.go -a amd64,arm64 ./Hydrunfile
-      - name: Publish to GitHub releases
+        run: go run main.go -o golang ./Hydrunfile
+      - name: Publish release to GitHub releases
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: marvinpinto/action-automatic-releases@latest
         with:
@@ -29,4 +29,4 @@ jobs:
           automatic_release_tag: "latest"
           prerelease: false
           files: |
-            out/release/*
+            out/*

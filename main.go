@@ -40,7 +40,7 @@ Usage: %s [OPTION...] "<COMMAND...>"
 	jobFlag := pflag.Int64P("jobs", "j", 1, "Maximum amount of parallel jobs")
 	itFlag := pflag.BoolP("it", "i", false, "Attach stdin and setup a TTY")
 	contextFlag := pflag.StringP("context", "c", "", "Directory to use in the container")
-	extraArgs := pflag.StringP("extraArgs", "e", "", "Extra arguments to pass to the Docker command")
+	extraArgs := pflag.StringP("extra-args", "e", "", "Extra arguments to pass to the Docker command")
 
 	pflag.Parse()
 
