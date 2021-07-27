@@ -39,6 +39,7 @@ Usage: %s [OPTION...] "<COMMAND...>"
 	osFlag := pflag.StringP("os", "o", "debian", "Comma-separated list of operating systems to run on")
 	jobFlag := pflag.Int64P("jobs", "j", 1, "Maximum amount of parallel jobs")
 	itFlag := pflag.BoolP("it", "i", false, "Attach stdin and setup a TTY")
+	contextFlag := pflag.StringP("context", "c", "", "Directory to use in the container")
 	extraArgs := pflag.StringP("extraArgs", "e", "", "Extra arguments to pass to the Docker command")
 
 	pflag.Parse()
@@ -60,7 +61,13 @@ Usage: %s [OPTION...] "<COMMAND...>"
 	arches := strings.Split(*archFlag, ",")
 	oses := strings.Split(*osFlag, ",")
 	command := strings.Join(pflag.Args(), " ")
-	pwd := osutils.Getenv("PWD")
+	pwd, err := osutils.Getwd()
+	if err != nil {
+		log.Fatalln("could not get working directory:", err)
+	}
+	if *contextFlag != "" {
+		pwd = *contextFlag
+	}
 
 	// Create build matrix
 	targets := []Target{}
@@ -81,7 +88,7 @@ Usage: %s [OPTION...] "<COMMAND...>"
 	for _, target := range targets {
 		// Aquire lock
 		if err := sem.Acquire(ctx, 1); err != nil {
-			panic(err)
+			log.Fatalln("could acquire lock:", err)
 		}
 
 		go func(t Target) {
@@ -118,11 +125,11 @@ Usage: %s [OPTION...] "<COMMAND...>"
 				// Get stdout and stderr pipes
 				stdout, err := cmd.StdoutPipe()
 				if err != nil {
-					panic(err)
+					log.Fatalln("could not get stdout:", err)
 				}
 				stderr, err := cmd.StderrPipe()
 				if err != nil {
-					panic(err)
+					log.Fatalln("could not get stderr:", err)
 				}
 
 				// Read from stderr and stdout
@@ -150,7 +157,7 @@ Usage: %s [OPTION...] "<COMMAND...>"
 
 			// Run the command
 			if err := cmd.Run(); err != nil {
-				panic(err)
+				log.Fatalln("could not run command:", err)
 			}
 
 			// Release lock
