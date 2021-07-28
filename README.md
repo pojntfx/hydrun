@@ -2,7 +2,9 @@
 
 Execute a command for the current directory on multiple architectures and operating systems.
 
-![hydrun CI](https://github.com/pojntfx/hydrun/workflows/hydrun%20CI/badge.svg)
+[![hydrun CI](https://github.com/pojntfx/hydrun/actions/workflows/hydrun.yaml/badge.svg)](https://github.com/pojntfx/hydrun/actions/workflows/hydrun.yaml)
+[![Matrix](https://img.shields.io/matrix/hydrun:matrix.org)](https://matrix.to/#/#hydrun:matrix.org?via=matrix.org)
+[![Binary Downloads](https://img.shields.io/github/downloads/pojntfx/hydrun/total?label=binary%20downloads)](https://github.com/pojntfx/hydrun/releases)
 
 ## Overview
 
@@ -19,14 +21,29 @@ It can, for example, be used for ...
 
 ## Installation
 
-Binaries are available on [GitHub releases](https://github.com/pojntfx/hydrun/releases).
+Static binaries are also available on [GitHub releases](https://github.com/pojntfx/hydrun/releases).
 
-You can install them like so:
+On Linux, you can install them like so:
 
 ```shell
-$ curl -L -o /tmp/hydrun https://github.com/pojntfx/hydrun/releases/download/latest/hydrun.linux-$(uname -m)
+$ curl -L -o /tmp/hydrun "https://github.com/pojntfx/hydrun/releases/download/latest/hydrun.linux-$(uname -m)"
 $ sudo install /tmp/hydrun /usr/local/bin
 ```
+
+On macOS, you can use the following:
+
+```shell
+$ curl -L -o /tmp/hydrun "https://github.com/pojntfx/hydrun/releases/download/latest/hydrun.darwin-$(uname -m)"
+$ sudo install /tmp/hydrun /usr/local/bin
+```
+
+On Windows, the following should work (using PowerShell as administrator):
+
+```shell
+PS> Invoke-WebRequest https://github.com/pojntfx/hydrun/releases/download/latest/hydrun.windows-x86_64.exe -OutFile \Windows\System32\hydrun.exe
+```
+
+You can find binaries for more operating systems and architectures on [GitHub releases](https://github.com/pojntfx/hydrun/releases).
 
 ## Usage
 
@@ -175,6 +192,24 @@ Usage: hydrun [OPTION...] "<COMMAND...>"
   -j, --jobs int           Maximum amount of parallel jobs (default 1)
   -o, --os string          Comma-separated list of operating systems to run on (default "debian")
 ```
+
+## Contributing
+
+To contribute, please use the [GitHub flow](https://guides.github.com/introduction/flow/) and follow our [Code of Conduct](./CODE_OF_CONDUCT.md).
+
+To build hydrun locally, run:
+
+```shell
+$ git clone https://github.com/pojntfx/hydrun.git
+$ cd hydrun
+$ go run main.go --help
+```
+
+Have any questions or need help? Chat with us [on Matrix](https://matrix.to/#/#hydrun:matrix.org?via=matrix.org)!
+
+## Related Projects
+
+If you want to quickly cross-compile your Go app, check out [bagop](https://github.com/pojntfx/bagop)!
 
 ## License
 
