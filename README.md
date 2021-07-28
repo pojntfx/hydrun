@@ -26,21 +26,21 @@ Static binaries are also available on [GitHub releases](https://github.com/pojnt
 On Linux, you can install them like so:
 
 ```shell
-$ curl -L -o /tmp/hydrun "https://github.com/pojntfx/hydrun/releases/download/latest/hydrun.linux-$(uname -m)"
+$ curl -L -o /tmp/hydrun "https://github.com/pojntfx/hydrun/releases/latest/download/hydrun.linux-$(uname -m)"
 $ sudo install /tmp/hydrun /usr/local/bin
 ```
 
 On macOS, you can use the following:
 
 ```shell
-$ curl -L -o /tmp/hydrun "https://github.com/pojntfx/hydrun/releases/download/latest/hydrun.darwin-$(uname -m)"
+$ curl -L -o /tmp/hydrun "https://github.com/pojntfx/hydrun/releases/latest/download/hydrun.darwin-$(uname -m)"
 $ sudo install /tmp/hydrun /usr/local/bin
 ```
 
 On Windows, the following should work (using PowerShell as administrator):
 
 ```shell
-PS> Invoke-WebRequest https://github.com/pojntfx/hydrun/releases/download/latest/hydrun.windows-x86_64.exe -OutFile \Windows\System32\hydrun.exe
+PS> Invoke-WebRequest https://github.com/pojntfx/hydrun/releases/latest/download/hydrun.windows-x86_64.exe -OutFile \Windows\System32\hydrun.exe
 ```
 
 You can find binaries for more operating systems and architectures on [GitHub releases](https://github.com/pojntfx/hydrun/releases).
@@ -159,7 +159,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
       - name: Set up hydrun
         run: |
-          curl -L -o /tmp/hydrun https://github.com/pojntfx/hydrun/releases/download/latest/hydrun.linux-$(uname -m)
+          curl -L -o /tmp/hydrun https://github.com/pojntfx/hydrun/releases/latest/download/hydrun.linux-$(uname -m)
           sudo install /tmp/hydrun /usr/local/bin
       - name: Build with hydrun
         run: hydrun -a amd64,arm64 ./Hydrunfile
