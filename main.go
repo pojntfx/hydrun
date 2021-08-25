@@ -81,6 +81,17 @@ Usage: %s [OPTION...] "<COMMAND...>"
 		}
 	}
 
+	// Pull and tag images
+	for _, target := range targets {
+		if output, err := exec.Command("docker", strings.Split(fmt.Sprintf(`pull --platform linux/%v %v`, target.Architecture, target.OS), " ")...).CombinedOutput(); err != nil {
+			log.Fatalln("could not pull image:", err.Error()+":", string(output))
+		}
+
+		if output, err := exec.Command("docker", strings.Split(fmt.Sprintf(`tag %v %v-%v`, target.OS, target.OS, strings.Replace(target.Architecture, "/", "-", -1)), " ")...).CombinedOutput(); err != nil {
+			log.Fatalln("could not tag image:", err.Error()+":", string(output))
+		}
+	}
+
 	// Setup concurrency
 	sem := semaphore.NewWeighted(*jobFlag)
 	ctx := context.Background()
@@ -88,12 +99,12 @@ Usage: %s [OPTION...] "<COMMAND...>"
 	for _, target := range targets {
 		// Aquire lock
 		if err := sem.Acquire(ctx, 1); err != nil {
-			log.Fatalln("could acquire lock:", err)
+			log.Fatalln("could not acquire lock:", err)
 		}
 
 		go func(t Target) {
 			// Construct the arguments
-			dockerArgs := fmt.Sprintf(`run %v %v:/data:z --platform linux/%v%v %v /bin/sh -c`, func() string {
+			dockerArgs := fmt.Sprintf(`run %v %v:/data:z --platform linux/%v%v %v-%v /bin/sh -c`, func() string {
 				// Attach stdin and setup a TTY
 				if *itFlag {
 					return "-it -v"
@@ -107,7 +118,7 @@ Usage: %s [OPTION...] "<COMMAND...>"
 				}
 
 				return args
-			}(), t.OS)
+			}(), t.OS, strings.Replace(t.Architecture, "/", "-", -1))
 			commandArgs := fmt.Sprintf(`cd /data && %v`, t.Command)
 
 			// Construct the command
