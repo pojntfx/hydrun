@@ -21,12 +21,12 @@ jobs:
           go-version: 1.16
       - name: Build with hydrun
         run: go run main.go -o golang ./Hydrunfile
-      - name: Publish branch preview to GitHub releases
-        if: ${{ github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/v') }}
+      - name: Publish branch preview release to GitHub releases
+        if: ${{ github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/v') && !startsWith(github.ref, 'refs/pull') }}
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: ${{ github.ref }}
+          automatic_release_tag: ${{ format(github.ref, 'refs/heads/', '' }}
           prerelease: true
           files: |
             out/*
