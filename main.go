@@ -36,11 +36,12 @@ Usage: %s [OPTION...] "<COMMAND...>"
 
 	// Parse flags
 	archFlag := pflag.StringP("arch", "a", "amd64", "Comma-separated list of architectures to run on")
-	osFlag := pflag.StringP("os", "o", "debian", "Comma-separated list of operating systems to run on")
+	osFlag := pflag.StringP("os", "o", "debian", "Comma-separated list of operating systems (Docker images) to run on")
 	jobFlag := pflag.Int64P("jobs", "j", 1, "Maximum amount of parallel jobs")
 	itFlag := pflag.BoolP("it", "i", false, "Attach stdin and setup a TTY")
 	contextFlag := pflag.StringP("context", "c", "", "Directory to use in the container")
 	extraArgs := pflag.StringP("extra-args", "e", "", "Extra arguments to pass to the Docker command")
+	pullFlag := pflag.BoolP("pull", "p", false, "Always pull the latest available tag of the Docker images")
 
 	pflag.Parse()
 
@@ -83,12 +84,39 @@ Usage: %s [OPTION...] "<COMMAND...>"
 
 	// Pull and tag images
 	for _, target := range targets {
-		if output, err := exec.Command("docker", strings.Split(fmt.Sprintf(`pull --platform linux/%v %v`, target.Architecture, target.OS), " ")...).CombinedOutput(); err != nil {
-			log.Fatalln("could not pull image:", err.Error()+":", string(output))
+		existsCmd := exec.Command("docker", strings.Split(fmt.Sprintf(`inspect %v`, getImageNameWithSuffix(target.OS, target.Architecture)), " ")...)
+
+		log.Println(existsCmd)
+
+		shouldPullAndTag := true
+		if *pullFlag {
+			shouldPullAndTag = false
+		} else {
+			if output, err := existsCmd.CombinedOutput(); err != nil {
+				if strings.Contains(string(output), "Error: No such object") {
+					shouldPullAndTag = false
+				} else {
+					log.Fatalln("could not check if image already exists:", err)
+				}
+			}
 		}
 
-		if output, err := exec.Command("docker", strings.Split(fmt.Sprintf(`tag %v %v-%v`, target.OS, target.OS, strings.Replace(target.Architecture, "/", "-", -1)), " ")...).CombinedOutput(); err != nil {
-			log.Fatalln("could not tag image:", err.Error()+":", string(output))
+		if !shouldPullAndTag {
+			runCmd := exec.Command("docker", strings.Split(fmt.Sprintf(`pull --platform linux/%v %v`, target.Architecture, target.OS), " ")...)
+
+			log.Println(runCmd)
+
+			if output, err := runCmd.CombinedOutput(); err != nil {
+				log.Fatalln("could not pull image:", err.Error()+":", string(output))
+			}
+
+			tagCmd := exec.Command("docker", strings.Split(fmt.Sprintf(`tag %v %v`, target.OS, getImageNameWithSuffix(target.OS, target.Architecture)), " ")...)
+
+			log.Println(tagCmd)
+
+			if output, err := tagCmd.CombinedOutput(); err != nil {
+				log.Fatalln("could not tag image:", err.Error()+":", string(output))
+			}
 		}
 	}
 
@@ -104,7 +132,7 @@ Usage: %s [OPTION...] "<COMMAND...>"
 
 		go func(t Target) {
 			// Construct the arguments
-			dockerArgs := fmt.Sprintf(`run %v %v:/data:z --platform linux/%v%v %v-%v /bin/sh -c`, func() string {
+			dockerArgs := fmt.Sprintf(`run %v %v:/data:z --platform linux/%v%v %v /bin/sh -c`, func() string {
 				// Attach stdin and setup a TTY
 				if *itFlag {
 					return "-it -v"
@@ -118,7 +146,7 @@ Usage: %s [OPTION...] "<COMMAND...>"
 				}
 
 				return args
-			}(), t.OS, strings.Replace(t.Architecture, "/", "-", -1))
+			}(), getImageNameWithSuffix(t.OS, t.Architecture))
 			commandArgs := fmt.Sprintf(`cd /data && %v`, t.Command)
 
 			// Construct the command
@@ -178,4 +206,8 @@ Usage: %s [OPTION...] "<COMMAND...>"
 
 	// Wait till all targets have run
 	sem.Acquire(ctx, *jobFlag)
+}
+
+func getImageNameWithSuffix(image, architecture string) string {
+	return image + "-" + strings.Replace(architecture, "/", "-", -1)
 }
