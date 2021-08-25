@@ -185,12 +185,14 @@ Execute a command for the current directory on multiple architectures and operat
 See https://github.com/pojntfx/hydrun for more information.
 
 Usage: hydrun [OPTION...] "<COMMAND...>"
-  -a, --arch string        Comma-separated list of architectures to run on (default "amd64")
-  -c, --context string     Directory to use in the container
-  -e, --extra-args string  Extra arguments to pass to the Docker command
-  -i, --it                 Attach stdin and setup a TTY
-  -j, --jobs int           Maximum amount of parallel jobs (default 1)
-  -o, --os string          Comma-separated list of operating systems to run on (default "debian")
+  -a, --arch string         Comma-separated list of architectures to run on (default "amd64")
+  -c, --context string      Directory to use in the container
+  -e, --extra-args string   Extra arguments to pass to the Docker command
+  -i, --it                  Attach stdin and setup a TTY
+  -j, --jobs int            Maximum amount of parallel jobs (default 1)
+  -o, --os string           Comma-separated list of operating systems (Docker images) to run on (default "debian")
+  -p, --pull                Always pull the specified tags of the operating systems (Docker images)
+  -q, --quiet               Disable logging executed commands
 ```
 
 ## Contributing
