@@ -41,7 +41,7 @@ Usage: %s [OPTION...] "<COMMAND...>"
 	itFlag := pflag.BoolP("it", "i", false, "Attach stdin and setup a TTY")
 	contextFlag := pflag.StringP("context", "c", "", "Directory to use in the container")
 	extraArgs := pflag.StringP("extra-args", "e", "", "Extra arguments to pass to the Docker command")
-	pullFlag := pflag.BoolP("pull", "p", false, "Always pull the latest available tag of the Docker images")
+	pullFlag := pflag.BoolP("pull", "p", false, "Always pull the specified tags of the operating systems (Docker images)")
 	quietFlag := pflag.BoolP("quiet", "q", false, "Disable logging executed commands")
 
 	pflag.Parse()
