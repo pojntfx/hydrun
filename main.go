@@ -42,6 +42,7 @@ Usage: %s [OPTION...] "<COMMAND...>"
 	contextFlag := pflag.StringP("context", "c", "", "Directory to use in the container")
 	extraArgs := pflag.StringP("extra-args", "e", "", "Extra arguments to pass to the Docker command")
 	pullFlag := pflag.BoolP("pull", "p", false, "Always pull the latest available tag of the Docker images")
+	quietFlag := pflag.BoolP("quiet", "q", false, "Disable logging executed commands")
 
 	pflag.Parse()
 
@@ -86,7 +87,9 @@ Usage: %s [OPTION...] "<COMMAND...>"
 	for _, target := range targets {
 		existsCmd := exec.Command("docker", strings.Split(fmt.Sprintf(`inspect %v`, getImageNameWithSuffix(target.OS, target.Architecture)), " ")...)
 
-		log.Println(existsCmd)
+		if !*quietFlag {
+			log.Println(existsCmd)
+		}
 
 		shouldPullAndTag := true
 		if *pullFlag {
@@ -104,7 +107,9 @@ Usage: %s [OPTION...] "<COMMAND...>"
 		if !shouldPullAndTag {
 			runCmd := exec.Command("docker", strings.Split(fmt.Sprintf(`pull --platform linux/%v %v`, target.Architecture, target.OS), " ")...)
 
-			log.Println(runCmd)
+			if !*quietFlag {
+				log.Println(runCmd)
+			}
 
 			if output, err := runCmd.CombinedOutput(); err != nil {
 				log.Fatalln("could not pull image:", err.Error()+":", string(output))
@@ -112,7 +117,9 @@ Usage: %s [OPTION...] "<COMMAND...>"
 
 			tagCmd := exec.Command("docker", strings.Split(fmt.Sprintf(`tag %v %v`, target.OS, getImageNameWithSuffix(target.OS, target.Architecture)), " ")...)
 
-			log.Println(tagCmd)
+			if !*quietFlag {
+				log.Println(tagCmd)
+			}
 
 			if output, err := tagCmd.CombinedOutput(); err != nil {
 				log.Fatalln("could not tag image:", err.Error()+":", string(output))
@@ -152,7 +159,9 @@ Usage: %s [OPTION...] "<COMMAND...>"
 			// Construct the command
 			cmd := exec.Command("docker", append(strings.Split(dockerArgs, " "), commandArgs)...)
 
-			log.Println(cmd)
+			if !*quietFlag {
+				log.Println(cmd)
+			}
 
 			// Handle interactivity
 			if *itFlag {
