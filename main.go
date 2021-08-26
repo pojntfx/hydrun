@@ -36,11 +36,13 @@ Usage: %s [OPTION...] "<COMMAND...>"
 
 	// Parse flags
 	archFlag := pflag.StringP("arch", "a", "amd64", "Comma-separated list of architectures to run on")
-	osFlag := pflag.StringP("os", "o", "debian", "Comma-separated list of operating systems to run on")
+	osFlag := pflag.StringP("os", "o", "debian", "Comma-separated list of operating systems (Docker images) to run on")
 	jobFlag := pflag.Int64P("jobs", "j", 1, "Maximum amount of parallel jobs")
 	itFlag := pflag.BoolP("it", "i", false, "Attach stdin and setup a TTY")
 	contextFlag := pflag.StringP("context", "c", "", "Directory to use in the container")
 	extraArgs := pflag.StringP("extra-args", "e", "", "Extra arguments to pass to the Docker command")
+	pullFlag := pflag.BoolP("pull", "p", false, "Always pull the specified tags of the operating systems (Docker images)")
+	quietFlag := pflag.BoolP("quiet", "q", false, "Disable logging executed commands")
 
 	pflag.Parse()
 
@@ -81,6 +83,50 @@ Usage: %s [OPTION...] "<COMMAND...>"
 		}
 	}
 
+	// Pull and tag images
+	for _, target := range targets {
+		existsCmd := exec.Command("docker", strings.Split(fmt.Sprintf(`inspect %v`, getImageNameWithSuffix(target.OS, target.Architecture)), " ")...)
+
+		if !*quietFlag {
+			log.Println(existsCmd)
+		}
+
+		shouldPullAndTag := true
+		if *pullFlag {
+			shouldPullAndTag = false
+		} else {
+			if output, err := existsCmd.CombinedOutput(); err != nil {
+				if strings.Contains(string(output), "Error: No such object") {
+					shouldPullAndTag = false
+				} else {
+					log.Fatalln("could not check if image already exists:", err)
+				}
+			}
+		}
+
+		if !shouldPullAndTag {
+			runCmd := exec.Command("docker", strings.Split(fmt.Sprintf(`pull --platform linux/%v %v`, target.Architecture, target.OS), " ")...)
+
+			if !*quietFlag {
+				log.Println(runCmd)
+			}
+
+			if output, err := runCmd.CombinedOutput(); err != nil {
+				log.Fatalln("could not pull image:", err.Error()+":", string(output))
+			}
+
+			tagCmd := exec.Command("docker", strings.Split(fmt.Sprintf(`tag %v %v`, target.OS, getImageNameWithSuffix(target.OS, target.Architecture)), " ")...)
+
+			if !*quietFlag {
+				log.Println(tagCmd)
+			}
+
+			if output, err := tagCmd.CombinedOutput(); err != nil {
+				log.Fatalln("could not tag image:", err.Error()+":", string(output))
+			}
+		}
+	}
+
 	// Setup concurrency
 	sem := semaphore.NewWeighted(*jobFlag)
 	ctx := context.Background()
@@ -88,7 +134,7 @@ Usage: %s [OPTION...] "<COMMAND...>"
 	for _, target := range targets {
 		// Aquire lock
 		if err := sem.Acquire(ctx, 1); err != nil {
-			log.Fatalln("could acquire lock:", err)
+			log.Fatalln("could not acquire lock:", err)
 		}
 
 		go func(t Target) {
@@ -107,13 +153,15 @@ Usage: %s [OPTION...] "<COMMAND...>"
 				}
 
 				return args
-			}(), t.OS)
+			}(), getImageNameWithSuffix(t.OS, t.Architecture))
 			commandArgs := fmt.Sprintf(`cd /data && %v`, t.Command)
 
 			// Construct the command
 			cmd := exec.Command("docker", append(strings.Split(dockerArgs, " "), commandArgs)...)
 
-			log.Println(cmd)
+			if !*quietFlag {
+				log.Println(cmd)
+			}
 
 			// Handle interactivity
 			if *itFlag {
@@ -167,4 +215,8 @@ Usage: %s [OPTION...] "<COMMAND...>"
 
 	// Wait till all targets have run
 	sem.Acquire(ctx, *jobFlag)
+}
+
+func getImageNameWithSuffix(image, architecture string) string {
+	return image + "-" + strings.Replace(architecture, "/", "-", -1)
 }
