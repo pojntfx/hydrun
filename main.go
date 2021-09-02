@@ -142,11 +142,11 @@ Usage: %s [OPTION...] "<COMMAND...>"
 		go func(t Target) {
 			// Construct the arguments
 			dockerArgs := fmt.Sprintf(
-				`run %v%v --platform linux/%v%v %v /bin/sh -c`,
+				`run %v%v--platform linux/%v%v %v /bin/sh -c`,
 				func() string {
 					// Attach stdin and setup a TTY
 					if *itFlag {
-						return "-it"
+						return "-it "
 					}
 
 					return ""
@@ -154,10 +154,10 @@ Usage: %s [OPTION...] "<COMMAND...>"
 				func() string {
 					if *mountFlag {
 						if *readOnlyFlag {
-							return fmt.Sprintf(" -v %v:/data:ro", pwd)
+							return fmt.Sprintf("-v %v:/data:ro ", pwd)
 						}
 
-						return fmt.Sprintf(" -v %v:/data:z", pwd)
+						return fmt.Sprintf("-v %v:/data:z ", pwd)
 					}
 
 					return ""
