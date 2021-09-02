@@ -186,13 +186,15 @@ See https://github.com/pojntfx/hydrun for more information.
 
 Usage: hydrun [OPTION...] "<COMMAND...>"
   -a, --arch string         Comma-separated list of architectures to run on (default "amd64")
-  -c, --context string      Directory to use in the container
+  -c, --context string      Directory to use in the container (default is the current working directory)
   -e, --extra-args string   Extra arguments to pass to the Docker command
   -i, --it                  Attach stdin and setup a TTY
   -j, --jobs int            Maximum amount of parallel jobs (default 1)
+  -m, --mount               Enable mounting the directory specified with the context flag (default true)
   -o, --os string           Comma-separated list of operating systems (Docker images) to run on (default "debian")
   -p, --pull                Always pull the specified tags of the operating systems (Docker images)
   -q, --quiet               Disable logging executed commands
+  -r, --readyOnly           Mount the directory specified as read-only
 ```
 
 ## Contributing
