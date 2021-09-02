@@ -39,10 +39,12 @@ Usage: %s [OPTION...] "<COMMAND...>"
 	osFlag := pflag.StringP("os", "o", "debian", "Comma-separated list of operating systems (Docker images) to run on")
 	jobFlag := pflag.Int64P("jobs", "j", 1, "Maximum amount of parallel jobs")
 	itFlag := pflag.BoolP("it", "i", false, "Attach stdin and setup a TTY")
-	contextFlag := pflag.StringP("context", "c", "", "Directory to use in the container")
+	contextFlag := pflag.StringP("context", "c", "", "Directory to use in the container (default is the current working directory)")
 	extraArgs := pflag.StringP("extra-args", "e", "", "Extra arguments to pass to the Docker command")
 	pullFlag := pflag.BoolP("pull", "p", false, "Always pull the specified tags of the operating systems (Docker images)")
 	quietFlag := pflag.BoolP("quiet", "q", false, "Disable logging executed commands")
+	mountFlag := pflag.BoolP("mount", "m", true, "Enable mounting the directory specified with the context flag")
+	readOnlyFlag := pflag.BoolP("readyOnly", "r", false, "Mount the directory specified as read-only")
 
 	pflag.Parse()
 
@@ -139,22 +141,42 @@ Usage: %s [OPTION...] "<COMMAND...>"
 
 		go func(t Target) {
 			// Construct the arguments
-			dockerArgs := fmt.Sprintf(`run %v %v:/data:z --platform linux/%v%v %v /bin/sh -c`, func() string {
-				// Attach stdin and setup a TTY
-				if *itFlag {
-					return "-it -v"
-				}
+			dockerArgs := fmt.Sprintf(
+				`run %v%v--platform linux/%v%v %v /bin/sh -c`,
+				func() string {
+					// Attach stdin and setup a TTY
+					if *itFlag {
+						return "-it "
+					}
 
-				return "-v"
-			}(), pwd, t.Architecture, func() string {
-				args := *extraArgs
-				if args != "" {
-					args = " " + args
-				}
+					return ""
+				}(),
+				func() string {
+					if *mountFlag {
+						if *readOnlyFlag {
+							return fmt.Sprintf("-v %v:/data:ro ", pwd)
+						}
 
-				return args
-			}(), getImageNameWithSuffix(t.OS, t.Architecture))
-			commandArgs := fmt.Sprintf(`cd /data && %v`, t.Command)
+						return fmt.Sprintf("-v %v:/data:z ", pwd)
+					}
+
+					return ""
+				}(),
+				t.Architecture,
+				func() string {
+					args := *extraArgs
+					if args != "" {
+						args = " " + args
+					}
+
+					return args
+				}(),
+				getImageNameWithSuffix(t.OS, t.Architecture),
+			)
+			commandArgs := t.Command
+			if *mountFlag {
+				commandArgs = fmt.Sprintf(`cd /data && %v`, t.Command)
+			}
 
 			// Construct the command
 			cmd := exec.Command("docker", append(strings.Split(dockerArgs, " "), commandArgs)...)
