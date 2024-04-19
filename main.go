@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"log"
 	"os"
-	osutils "os"
 	"os/exec"
 	"strings"
 
@@ -65,7 +63,7 @@ Usage: %s [OPTION...] "<COMMAND...>"
 	arches := strings.Split(*archFlag, ",")
 	oses := strings.Split(*osFlag, ",")
 	command := strings.Join(pflag.Args(), " ")
-	pwd, err := osutils.Getwd()
+	pwd, err := os.Getwd()
 	if err != nil {
 		log.Fatalln("could not get working directory:", err)
 	}
@@ -140,6 +138,8 @@ Usage: %s [OPTION...] "<COMMAND...>"
 		}
 
 		go func(t Target) {
+			defer sem.Release(1)
+
 			// Construct the arguments
 			dockerArgs := fmt.Sprintf(
 				`run %v%v--platform linux/%v%v %v /bin/sh -c`,
@@ -185,53 +185,19 @@ Usage: %s [OPTION...] "<COMMAND...>"
 				log.Println(cmd)
 			}
 
-			// Handle interactivity
+			// Attach stdout and stderr
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+
+			// Attach stdin
 			if *itFlag {
-				// Attach stdin, stdout and stderr
-				cmd.Stdin = osutils.Stdin
-				cmd.Stdout = osutils.Stdout
-				cmd.Stderr = osutils.Stderr
-			} else {
-				// Get stdout and stderr pipes
-				stdout, err := cmd.StdoutPipe()
-				if err != nil {
-					log.Fatalln("could not get stdout:", err)
-				}
-				stderr, err := cmd.StderrPipe()
-				if err != nil {
-					log.Fatalln("could not get stderr:", err)
-				}
-
-				// Read from stderr and stdout
-				stdoutScanner := bufio.NewScanner(stdout)
-				stderrScanner := bufio.NewScanner(stderr)
-
-				// Split into lines
-				stdoutScanner.Split(bufio.ScanLines)
-				stderrScanner.Split(bufio.ScanLines)
-
-				// Print to stdout with prefix
-				prefix := fmt.Sprintf("%v/%v/%v", t.Architecture, t.OS, t.Command)
-				go func() {
-					for stdoutScanner.Scan() {
-						fmt.Println(prefix+"/stdout\t", stdoutScanner.Text())
-					}
-				}()
-
-				go func() {
-					for stderrScanner.Scan() {
-						fmt.Println(prefix+"/stderr\t", stderrScanner.Text())
-					}
-				}()
+				cmd.Stdin = os.Stdin
 			}
 
 			// Run the command
 			if err := cmd.Run(); err != nil {
 				log.Fatalln("could not run command:", err)
 			}
-
-			// Release lock
-			sem.Release(1)
 		}(target)
 	}
 

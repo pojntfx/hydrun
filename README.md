@@ -45,7 +45,7 @@ PS> Invoke-WebRequest https://github.com/pojntfx/hydrun/releases/latest/download
 
 You can find binaries for more operating systems and architectures on [GitHub releases](https://github.com/pojntfx/hydrun/releases).
 
-## Usage
+## Tutorial
 
 Before continuing, please ensure that you have both [Docker buildx](https://github.com/docker/buildx) and [qemu-user-static](https://github.com/multiarch/qemu-user-static) installed on the host.
 
@@ -133,7 +133,7 @@ hello-world.linux-aarch64  hello-world.linux-x86_64  Hydrunfile  main.c
 
 Most of the time you'll probably want to use the `Hydrunfile` to install toolchains/dependencies and then call your `Makefile`, the Go compiler, `cargo` etc.
 
-For an example, check out [pojntfx/liwasc](https://github.com/pojntfx/liwasc).
+For an example, check out [pojntfx/panrpc](https://github.com/pojntfx/panrpc).
 
 ### Usage in GitHub Actions
 
@@ -174,7 +174,7 @@ jobs:
             *.linux*
 ```
 
-For an example, check out [pojntfx/liwasc](https://github.com/pojntfx/liwasc).
+For an example, check out [pojntfx/panrpc](https://github.com/pojntfx/panrpc).
 
 ## Reference
 
@@ -217,6 +217,6 @@ If you want to quickly cross-compile your Go app, check out [bagop](https://gith
 
 ## License
 
-hydrun (c) 2021 Felicitas Pojtinger and contributors
+hydrun (c) 2024 Felicitas Pojtinger and contributors
 
 SPDX-License-Identifier: AGPL-3.0
