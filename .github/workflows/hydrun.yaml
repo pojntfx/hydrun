@@ -17,8 +17,6 @@ jobs:
         uses: docker/setup-buildx-action@v1
       - name: Set up Go
         uses: actions/setup-go@v5
-        with:
-          go-version: "1.22.2"
       - name: Build with hydrun
         run: go run main.go -o golang ./Hydrunfile
       - name: Publish branch preview release to GitHub releases

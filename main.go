@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/pflag"
@@ -33,7 +34,7 @@ Usage: %s [OPTION...] "<COMMAND...>"
 	}
 
 	// Parse flags
-	archFlag := pflag.StringP("arch", "a", "amd64", "Comma-separated list of architectures to run on")
+	archFlag := pflag.StringP("arch", "a", runtime.GOARCH, "Comma-separated list of architectures to run on")
 	osFlag := pflag.StringP("os", "o", "debian", "Comma-separated list of operating systems (Docker images) to run on")
 	jobFlag := pflag.Int64P("jobs", "j", 1, "Maximum amount of parallel jobs")
 	itFlag := pflag.BoolP("it", "i", false, "Attach stdin and setup a TTY")
