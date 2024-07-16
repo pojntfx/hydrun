@@ -4,7 +4,6 @@ Execute a command for the current directory on multiple architectures and operat
 
 [![hydrun CI](https://github.com/pojntfx/hydrun/actions/workflows/hydrun.yaml/badge.svg)](https://github.com/pojntfx/hydrun/actions/workflows/hydrun.yaml)
 [![Matrix](https://img.shields.io/matrix/hydrun:matrix.org)](https://matrix.to/#/#hydrun:matrix.org?via=matrix.org)
-[![Binary Downloads](https://img.shields.io/github/downloads/pojntfx/hydrun/total?label=binary%20downloads)](https://github.com/pojntfx/hydrun/releases)
 
 ## Overview
 
