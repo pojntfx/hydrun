@@ -97,7 +97,8 @@ Usage: %s [OPTION...] "<COMMAND...>"
 			shouldPullAndTag = false
 		} else {
 			if output, err := existsCmd.CombinedOutput(); err != nil {
-				if strings.Contains(string(output), "Error: No such object") {
+				// Titlecase-insensitive comparison since `docker` and `podman-docker` differ in their casing here
+				if strings.Contains(strings.ToLower(string(output)), strings.ToLower("Error: No such object")) {
 					shouldPullAndTag = false
 				} else {
 					log.Fatalln("could not check if image already exists:", err)
