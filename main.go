@@ -107,7 +107,25 @@ Usage: %s [OPTION...] "<COMMAND...>"
 		}
 
 		if !shouldPullAndTag {
+			// We need to enable `docker.io` as an unqualified search registry manually
+			// since `podman-docker` doesn't emulate Docker in this behavior fully
+			registriesConf, err := os.CreateTemp("", "registries.conf")
+			if err != nil {
+				log.Fatalln("could not create temporary registries.conf:", err)
+			}
+			defer os.Remove(registriesConf.Name())
+
+			if _, err := registriesConf.WriteString(`short-name-mode = "permissive"
+unqualified-search-registries = ["docker.io"]
+`); err != nil {
+				log.Fatalln("could not write to temporary registries.conf:", err)
+			}
+			if err := registriesConf.Close(); err != nil {
+				log.Fatalln("could not close temporary registries.conf:", err)
+			}
+
 			runCmd := exec.Command("docker", strings.Split(fmt.Sprintf(`pull --platform linux/%v %v`, target.Architecture, target.OS), " ")...)
+			runCmd.Env = []string{"CONTAINERS_REGISTRIES_CONF=" + registriesConf.Name()}
 
 			if !*quietFlag {
 				log.Println(runCmd)
